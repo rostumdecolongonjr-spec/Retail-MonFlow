@@ -1,0 +1,229 @@
+{
+  "chosen_key": "category_id",
+  "owned_by": "products",
+  "join_survival": {
+    "key": "category_id",
+    "present_after_join": true,
+    "entered_from": "products",
+    "nulls_after_join": 0,
+    "verdict": "survives the join intact"
+  },
+  "prediction": {
+    "distinct": 30,
+    "min": 17618,
+    "median": 20066,
+    "max": 21429,
+    "skew_ratio": 1.22
+  },
+  "rejected_alternatives": [
+    {
+      "column": "customer_id",
+      "source_file": "orders",
+      "distinct": 49751,
+      "min": 1,
+      "median": 11,
+      "max": 43,
+      "skew_ratio": 43.0,
+      "numerically_viable": true,
+      "viable": false,
+      "rejected_because": "49,751 groups is per-customer granularity, not a dimensional rollup; skew is real (43:1) but reflects individual purchase frequency, not a business segment"
+    },
+    {
+      "column": "store_city",
+      "source_file": "derived in join",
+      "distinct": 4,
+      "min": 124929,
+      "median": 144394,
+      "max": 186283,
+      "skew_ratio": 1.49,
+      "numerically_viable": true,
+      "viable": false,
+      "rejected_because": "only 4 distinct values - cannot fill 8 worker partitions without forcing multiple partitions to share one key"
+    }
+  ],
+  "all_candidates": [
+    {
+      "column": "order_item_id",
+      "source_file": "order_items",
+      "distinct": 600000,
+      "min": 1,
+      "median": 1,
+      "max": 1,
+      "skew_ratio": 1.0,
+      "numerically_viable": false,
+      "viable": false,
+      "rejected_because": "identifier, measure, or timestamp; 600,000 distinct values is near-unique"
+    },
+    {
+      "column": "order_id",
+      "source_file": "order_items + orders",
+      "distinct": 259233,
+      "min": 1,
+      "median": 2,
+      "max": 11,
+      "skew_ratio": 11.0,
+      "numerically_viable": true,
+      "viable": false,
+      "rejected_because": "foreign key into orders, not a grouping dimension"
+    },
+    {
+      "column": "product_id",
+      "source_file": "order_items + products",
+      "distinct": 10000,
+      "min": 26,
+      "median": 60,
+      "max": 90,
+      "skew_ratio": 3.46,
+      "numerically_viable": true,
+      "viable": false,
+      "rejected_because": "near-SKU granularity (10,000 groups) - too fine for a regional/category-style rollup"
+    },
+    {
+      "column": "qty",
+      "source_file": "order_items",
+      "distinct": 4,
+      "min": 149564,
+      "median": 149972,
+      "max": 150492,
+      "skew_ratio": 1.01,
+      "numerically_viable": true,
+      "viable": true,
+      "rejected_because": ""
+    },
+    {
+      "column": "unit_price",
+      "source_file": "derived in join",
+      "distinct": 4900,
+      "min": 84,
+      "median": 122,
+      "max": 160,
+      "skew_ratio": 1.9,
+      "numerically_viable": true,
+      "viable": false,
+      "rejected_because": "continuous financial value, not a grouping dimension"
+    },
+    {
+      "column": "customer_id",
+      "source_file": "orders",
+      "distinct": 49751,
+      "min": 1,
+      "median": 11,
+      "max": 43,
+      "skew_ratio": 43.0,
+      "numerically_viable": true,
+      "viable": false,
+      "rejected_because": "49,751 groups is per-customer granularity, not a dimensional rollup; skew is real (43:1) but reflects individual purchase frequency, not a business segment"
+    },
+    {
+      "column": "store_id",
+      "source_file": "orders + stores",
+      "distinct": 100,
+      "min": 5644,
+      "median": 6005,
+      "max": 6299,
+      "skew_ratio": 1.12,
+      "numerically_viable": true,
+      "viable": true,
+      "rejected_because": ""
+    },
+    {
+      "column": "order_date",
+      "source_file": "orders",
+      "distinct": 1462,
+      "min": 312,
+      "median": 409,
+      "max": 538,
+      "skew_ratio": 1.72,
+      "numerically_viable": false,
+      "viable": false,
+      "rejected_because": "identifier, measure, or timestamp"
+    },
+    {
+      "column": "promotion_id",
+      "source_file": "orders",
+      "distinct": 50,
+      "min": 11498,
+      "median": 11972,
+      "max": 12478,
+      "skew_ratio": 1.09,
+      "numerically_viable": true,
+      "viable": true,
+      "rejected_because": ""
+    },
+    {
+      "column": "store_city",
+      "source_file": "derived in join",
+      "distinct": 4,
+      "min": 124929,
+      "median": 144394,
+      "max": 186283,
+      "skew_ratio": 1.49,
+      "numerically_viable": true,
+      "viable": false,
+      "rejected_because": "only 4 distinct values - cannot fill 8 worker partitions without forcing multiple partitions to share one key"
+    },
+    {
+      "column": "category_id",
+      "source_file": "products",
+      "distinct": 30,
+      "min": 17618,
+      "median": 20066,
+      "max": 21429,
+      "skew_ratio": 1.22,
+      "numerically_viable": true,
+      "viable": true,
+      "rejected_because": ""
+    },
+    {
+      "column": "supplier_id",
+      "source_file": "products",
+      "distinct": 200,
+      "min": 1915,
+      "median": 2978,
+      "max": 4086,
+      "skew_ratio": 2.13,
+      "numerically_viable": true,
+      "viable": true,
+      "rejected_because": ""
+    },
+    {
+      "column": "catalog_price",
+      "source_file": "derived in join",
+      "distinct": 4268,
+      "min": 36,
+      "median": 123,
+      "max": 556,
+      "skew_ratio": 15.44,
+      "numerically_viable": true,
+      "viable": false,
+      "rejected_because": "continuous financial value, not a grouping dimension"
+    },
+    {
+      "column": "amount",
+      "source_file": "derived in join",
+      "distinct": 11984,
+      "min": 9,
+      "median": 38,
+      "max": 153,
+      "skew_ratio": 17.0,
+      "numerically_viable": false,
+      "viable": false,
+      "rejected_because": "identifier, measure, or timestamp"
+    }
+  ],
+  "workload": "Compute line-item count, total amount, and mean amount per category_id across the joined 600,000-row dataset.",
+  "output_schema": {
+    "category_id": "int64",
+    "line_count": "int64",
+    "revenue_total": "double",
+    "revenue_mean": "double"
+  },
+  "join": {
+    "rows_before": 600000,
+    "rows_after": 600000,
+    "delta": 0,
+    "columns_after": 14,
+    "join_seconds": 0.5425,
+    "join_path": "order_items |> orders |> stores |> products"
+  }
+}

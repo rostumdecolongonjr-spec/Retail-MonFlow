@@ -1,0 +1,25 @@
+{
+  "join": {
+    "rows_before": 600000,
+    "rows_after": 600000,
+    "delta": 0,
+    "input_partitions": 4,
+    "broadcast_hash_joins": 6,
+    "sort_merge_joins": 0
+  },
+  "aggregation": {
+    "partitions": 4,
+    "groups": 30,
+    "seconds": 0.6369
+  },
+  "validation": {
+    "parallel_groups": 30,
+    "baseline_groups": 30,
+    "group_count_match": true,
+    "max_line_count_difference": 0,
+    "max_revenue_total_difference": 0.0,
+    "max_revenue_mean_difference": 9.094947017729282e-13,
+    "tolerance": 1e-06,
+    "passed": true
+  }
+}

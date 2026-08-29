@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Retail-Orders — Session 1 Parallel Compute Console</title>
+<style>
+  :root{
+    --navy:#16233d;
+    --navy2:#1f3358;
+    --blue:#2e5aa8;
+    --blue-light:#e8eef8;
+    --green:#2e7d32;
+    --green-bg:#e9f5ea;
+    --amber:#b5590a;
+    --amber-bg:#fdf0e2;
+    --amber-border:#e4a765;
+    --grey:#5b6472;
+    --grey-line:#d9dee6;
+    --ink:#1c2430;
+    --bg:#eef1f6;
+    font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-size:14px;}
+  .titlebar{background:var(--navy);color:#fff;padding:8px 18px;font-size:12.5px;
+    display:flex;align-items:center;gap:8px;letter-spacing:.2px;opacity:.9;}
+  .titlebar .dot{width:9px;height:9px;border-radius:50%;background:#d97757;display:inline-block;}
+  header.app{background:linear-gradient(180deg,var(--navy2),var(--navy));color:#fff;
+    padding:20px 28px 16px;}
+  header.app h1{margin:0 0 4px;font-size:22px;font-weight:700;letter-spacing:.2px;}
+  header.app .sub{font-size:12.5px;color:#c7d2e6;}
+  header.app .sub b{color:#fff;font-weight:600;}
+
+  nav.tabs{background:#fff;border-bottom:1px solid var(--grey-line);
+    display:flex;gap:2px;padding:0 20px;overflow-x:auto;}
+  nav.tabs button{background:none;border:none;padding:13px 16px;font-size:13.5px;
+    color:var(--grey);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;
+    font-weight:500;}
+  nav.tabs button:hover{color:var(--ink);}
+  nav.tabs button.active{color:var(--navy2);border-bottom-color:var(--blue);font-weight:700;}
+
+  main{padding:22px 28px 60px;max-width:1180px;margin:0 auto;}
+  .panel{display:none;}
+  .panel.active{display:block;animation:fade .15s ease-in;}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+
+  .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+  .stat{background:#fff;border:1px solid var(--grey-line);border-radius:8px;padding:16px 14px;
+    text-align:center;}
+  .stat .num{font-size:26px;font-weight:800;color:var(--navy2);}
+  .stat .num.green{color:var(--green);}
+  .stat .num.amber{color:var(--amber);font-size:16px;}
+  .stat .label{font-size:11.5px;color:var(--grey);margin-top:4px;line-height:1.3;}
+
+  h2.section{font-size:14px;margin:26px 0 10px;color:var(--navy2);font-weight:700;
+    display:flex;align-items:center;gap:8px;}
+  h2.section:first-child{margin-top:0;}
+
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--grey-line);
+    border-radius:6px;overflow:hidden;font-size:12.8px;}
+  thead th{background:var(--navy);color:#fff;text-align:left;padding:9px 12px;font-weight:600;
+    font-size:12px;}
+  tbody td{padding:8px 12px;border-top:1px solid var(--grey-line);vertical-align:top;}
+  tbody tr:hover{background:#f7f9fc;}
+  tr.status-done td:first-child{border-left:3px solid var(--green);}
+  tr.status-pending td:first-child{border-left:3px solid var(--amber);}
+  .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+  .pill.done{background:var(--green-bg);color:var(--green);}
+  .pill.pending{background:var(--amber-bg);color:var(--amber);}
+  .pill.viable{background:var(--green-bg);color:var(--green);}
+  .pill.rejected{background:#fbeaea;color:#a33636;}
+  .pill.chosen{background:#fff3d6;color:#9a6a00;border:1px solid #e8c568;}
+  .pill.pass{background:var(--green-bg);color:var(--green);}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;}
+
+  .banner{border:1px solid var(--amber-border);background:var(--amber-bg);color:#7a4008;
+    border-radius:8px;padding:12px 16px;font-size:12.8px;line-height:1.5;margin-bottom:18px;}
+  .banner b{color:#5c2f00;}
+  .banner.ok{border-color:#9bcf9e;background:var(--green-bg);color:#204d23;}
+  .banner.ok b{color:#173d19;}
+  .banner code{background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px;}
+
+  .card{background:#fff;border:1px solid var(--grey-line);border-radius:8px;padding:16px 18px;
+    margin-bottom:16px;}
+  .card h3{margin:0 0 8px;font-size:13.5px;color:var(--navy2);}
+  .flow{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.6px;
+    background:#0f1a2e;color:#dbe6f7;padding:14px 16px;border-radius:8px;line-height:1.8;}
+  .flow .k{color:#8ec7ff;}
+  .flow .join{color:#ffb37a;}
+
+  .grid2{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;}
+  .kpi-list{list-style:none;margin:0;padding:0;font-size:13px;}
+  .kpi-list li{display:flex;justify-content:space-between;padding:7px 0;
+    border-bottom:1px dashed var(--grey-line);}
+  .kpi-list li b{color:var(--navy2);}
+
+  .console-box{background:#0f1a2e;color:#c9d6ea;border-radius:8px;padding:16px 18px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;
+    line-height:1.65;white-space:pre-wrap;max-height:480px;overflow-y:auto;}
+  .console-box .h{color:#7fd8ff;}
+  .console-box .g{color:#8fdc8f;}
+  .console-box .a{color:#ffcf8f;}
+  .console-box .dim{color:#7c8aa3;}
+
+  .bars{display:flex;flex-direction:column;gap:6px;font-size:12px;}
+  .bar-row{display:grid;grid-template-columns:70px 1fr 70px;align-items:center;gap:8px;}
+  .bar-track{background:#eef1f6;border-radius:4px;height:14px;overflow:hidden;}
+  .bar-fill{height:100%;background:var(--blue);}
+  .bar-fill.light{background:#9db8e0;}
+
+  footer{max-width:1180px;margin:0 auto;padding:0 28px 40px;color:var(--grey);font-size:11.5px;}
+</style>
+</head>
+<body>
+
+<div class="titlebar"><span class="dot"></span> Retail-Orders — Session 1 Parallel Compute Console</div>
+
+<header class="app">
+  <h1>Retail-Orders — Session 1 Parallel Compute Console</h1>
+  <div class="sub">MIT 261 Parallel and Distributed Systems &nbsp;·&nbsp; partition key <b>category_id</b>
+    &nbsp;·&nbsp; bounded parallelism <b>4</b> &nbsp;·&nbsp; settings <b>(2, 4, 8)</b></div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button class="active" data-tab="pipeline">Pipeline</button>
+  <button data-tab="files">Files &amp; eligibility</button>
+  <button data-tab="join">Join &amp; partition key</button>
+  <button data-tab="baseline">Baseline vs parallel</button>
+  <button data-tab="correctness">Correctness &amp; output</button>
+  <button data-tab="balance">Partition balance</button>
+  <button data-tab="console">Console</button>
+</nav>
+
+<main>
+
+  <!-- ================= PIPELINE ================= -->
+  <section class="panel active" id="pipeline">
+    <div class="stat-row">
+      <div class="stat"><div class="num">600,000</div><div class="label">rows through the join</div></div>
+      <div class="stat"><div class="num">30</div><div class="label">groups in the result (category_id)</div></div>
+      <div class="stat"><div class="num">0.0100s</div><div class="label">pandas baseline median (5 runs)</div></div>
+      <div class="stat"><div class="num amber">PENDING</div><div class="label">parallel vs baseline — needs PySpark</div></div>
+    </div>
+
+    <div class="banner">
+      <b>Stages 5–7 need Spark.</b> This machine has no internet access to install PySpark, so
+      <code>parallel_compute.py</code>, <code>benchmark.py</code>, and <code>partition_analysis.py</code>
+      haven't executed yet — they're written, reviewed, and ready. Stages 1–4 and the diagram renderer
+      ran end-to-end against your real 12 CSVs; every number on this console except the Spark-only tabs
+      is genuine output, not a placeholder. See the <b>Console</b> tab for the exact JDK fix needed on your machine.
+    </div>
+
+    <h2 class="section">Run a stage</h2>
+    <table>
+      <thead><tr><th>Stage</th><th>Engine</th><th>Status</th><th>Headline result</th></tr></thead>
+      <tbody>
+        <tr class="status-done"><td>1. Profile files</td><td class="mono">pandas</td><td><span class="pill done">completed</span></td><td>12 files profiled · 11/11 foreign keys resolve · all 4 eligibility conditions met</td></tr>
+        <tr class="status-done"><td>2. Load and join</td><td class="mono">pandas</td><td><span class="pill done">completed</span></td><td>order_items ▸ orders ▸ stores ▸ products — 600,000 → 600,000 rows, 14 columns</td></tr>
+        <tr class="status-done"><td>3. Partition strategy</td><td class="mono">pandas</td><td><span class="pill done">completed</span></td><td>category_id chosen: 30 groups, 1.22:1 skew — derived from 15 scored candidates</td></tr>
+        <tr class="status-done"><td>4. Sequential baseline</td><td class="mono">pandas</td><td><span class="pill done">completed</span></td><td>median 0.0100s over 5 runs · total revenue 3,827,746,136.00 across 30 categories</td></tr>
+        <tr class="status-pending"><td>5. Parallel compute</td><td class="mono">Spark</td><td><span class="pill pending">not run</span></td><td>PySpark unavailable in this sandbox — needs JDK 17/21 + <code class="mono">pip install pyspark pyarrow</code></td></tr>
+        <tr class="status-pending"><td>6. Benchmark</td><td class="mono">Spark</td><td><span class="pill pending">not run</span></td><td>Compares baseline against 2 / 4 / 8 partitions — depends on stage 5</td></tr>
+        <tr class="status-pending"><td>7. Partition balance</td><td class="mono">Spark</td><td><span class="pill pending">not run</span></td><td>Key-level skew (below) is measured; physical Spark-partition skew needs stage 5</td></tr>
+        <tr class="status-done"><td>Render diagrams</td><td class="mono">graphviz</td><td><span class="pill done">completed</span></td><td>entity-model-session1.png + architecture-session1.png rendered</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="section">Artefacts in results/</h2>
+    <table>
+      <thead><tr><th>Artefact</th><th>Written by</th><th>Status</th><th>Size</th></tr></thead>
+      <tbody>
+        <tr class="status-done"><td class="mono">file_profile.json</td><td>profile_files.py</td><td><span class="pill done">written</span></td><td>9.2 KB</td></tr>
+        <tr class="status-done"><td class="mono">working_dataset.pkl</td><td>load_and_join.py <span class="dim">(parquet → pickle fallback, no pyarrow)</span></td><td><span class="pill done">written</span></td><td>60.6 MB</td></tr>
+        <tr class="status-done"><td class="mono">partition_strategy.json</td><td>partition_strategy.py</td><td><span class="pill done">written</span></td><td>6.0 KB</td></tr>
+        <tr class="status-done"><td class="mono">baseline_result.csv</td><td>sequential_baseline.py</td><td><span class="pill done">written</span></td><td>1.1 KB</td></tr>
+        <tr class="status-pending"><td class="mono">category_revenue.parquet</td><td>parallel_compute.py</td><td><span class="pill pending">pending</span></td><td>—</td></tr>
+        <tr class="status-pending"><td class="mono">validation_report.json</td><td>parallel_compute.py</td><td><span class="pill pending">pending</span></td><td>—</td></tr>
+        <tr class="status-pending"><td class="mono">session1_benchmark.csv</td><td>benchmark.py</td><td><span class="pill pending">pending</span></td><td>—</td></tr>
+        <tr class="status-pending"><td class="mono">partition_sizes.csv</td><td>partition_analysis.py</td><td><span class="pill pending">pending</span></td><td>—</td></tr>
+        <tr class="status-done"><td class="mono">docs/entity-model-session1.png</td><td>render_diagrams.py</td><td><span class="pill done">written</span></td><td>440 KB</td></tr>
+        <tr class="status-done"><td class="mono">architecture/architecture-session1.png</td><td>render_diagrams.py</td><td><span class="pill done">written</span></td><td>299 KB</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ================= FILES & ELIGIBILITY ================= -->
+  <section class="panel" id="files">
+    <h2 class="section">12 input files</h2>
+    <table>
+      <thead><tr><th>File</th><th>Role</th><th>Rows</th><th>Cols</th><th>Size</th><th>Candidate primary key(s)</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">order_items.csv</td><td>Event</td><td>600,000</td><td>5</td><td>14,736 KB</td><td class="mono">order_item_id</td></tr>
+        <tr><td class="mono">orders.csv</td><td>Event</td><td>300,000</td><td>5</td><td>8,539 KB</td><td class="mono">order_id</td></tr>
+        <tr><td class="mono">payments.csv</td><td>Event</td><td>300,000</td><td>3</td><td>5,484 KB</td><td class="mono">payment_id, order_id</td></tr>
+        <tr><td class="mono">shipments.csv</td><td>Event</td><td>300,000</td><td>3</td><td>6,131 KB</td><td class="mono">shipment_id, order_id</td></tr>
+        <tr><td class="mono">returns.csv</td><td>Event</td><td>30,000</td><td>3</td><td>505 KB</td><td class="mono">return_id</td></tr>
+        <tr><td class="mono">customers.csv</td><td>Entity</td><td>50,000</td><td>3</td><td>1,161 KB</td><td class="mono">customer_id</td></tr>
+        <tr><td class="mono">employees.csv</td><td>Entity</td><td>1,000</td><td>3</td><td>12.5 KB</td><td class="mono">employee_id</td></tr>
+        <tr><td class="mono">products.csv</td><td>Entity</td><td>10,000</td><td>4</td><td>155 KB</td><td class="mono">product_id</td></tr>
+        <tr><td class="mono">stores.csv</td><td>Entity</td><td>100</td><td>2</td><td>1.0 KB</td><td class="mono">store_id</td></tr>
+        <tr><td class="mono">suppliers.csv</td><td>Entity</td><td>200</td><td>2</td><td>1.7 KB</td><td class="mono">supplier_id</td></tr>
+        <tr><td class="mono">categories.csv</td><td><span class="dim">Lookup</span></td><td>30</td><td>2</td><td>0.3 KB</td><td class="mono">category_id, category_name</td></tr>
+        <tr><td class="mono">promotions.csv</td><td><span class="dim">Lookup</span></td><td>50</td><td>2</td><td>0.3 KB</td><td class="mono">promotion_id</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="section">Referential integrity — 11 foreign keys, 11/11 pass, 0 orphans</h2>
+    <table>
+      <thead><tr><th>Foreign key</th><th>Result</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">order_items.order_id → orders.order_id</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="mono">order_items.product_id → products.product_id</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="mono">orders.customer_id → customers.customer_id</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="mono">orders.store_id → stores.store_id</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="mono">orders.promotion_id → promotions.promotion_id</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="mono">products.category_id → categories.category_id</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="mono">products.supplier_id → suppliers.supplier_id</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="mono">employees.store_id → stores.store_id</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="mono">payments.order_id → orders.order_id</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="mono">shipments.order_id → orders.order_id</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="mono">returns.order_item_id → order_items.order_item_id</td><td><span class="pill pass">PASS</span></td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="section">Dataset eligibility (Part 2) — all 4 conditions met</h2>
+    <div class="grid2">
+      <div class="card">
+        <h3>✓ Condition 1 — at least 3 qualifying files</h3>
+        <p style="margin:0;font-size:12.8px;">10 Event/Entity files qualify (Lookup files <span class="mono">categories</span> and <span class="mono">promotions</span> excluded).</p>
+      </div>
+      <div class="card">
+        <h3>✓ Condition 2 — genuine one-to-many association</h3>
+        <p style="margin:0;font-size:12.8px;">
+          <b>orders 1..* order_items</b> (min 1, median 2, max 11 items/order) and
+          <b>customers 1..* orders</b> (min 1, median 6, max 19 orders/customer).<br>
+          <span class="dim">Note: payments.order_id and shipments.order_id are both unique →
+          1:1 extensions of Order, not second one-to-many associations.</span>
+        </p>
+      </div>
+      <div class="card">
+        <h3>✓ Condition 3 — usable timestamp</h3>
+        <p style="margin:0;font-size:12.8px;"><span class="mono">orders.order_date</span>, 2020‑01‑01 → 2024‑01‑01 (1,461-day span).</p>
+      </div>
+      <div class="card">
+        <h3>✓ Condition 4 — transactional volume</h3>
+        <p style="margin:0;font-size:12.8px;">1,530,000 combined Event rows (order_items + orders + payments + shipments + returns) ≥ 50,000 minimum.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= JOIN & PARTITION KEY ================= -->
+  <section class="panel" id="join">
+    <h2 class="section">Join path (Part 4)</h2>
+    <div class="flow">order_items <span class="join">|&gt;</span> orders    <span class="dim">on order_id</span>    <span class="dim">— NOT broadcast, 8.5 MB, expected shuffle</span>
+order_items <span class="join">|&gt;</span> stores    <span class="dim">on store_id</span>    <span class="dim">— broadcast, &lt;1 KB</span>
+order_items <span class="join">|&gt;</span> products  <span class="dim">on product_id</span>  <span class="dim">— broadcast, 155 KB</span></div>
+
+    <div class="grid2" style="margin-top:14px;">
+      <div class="card">
+        <h3>Row reconciliation</h3>
+        <ul class="kpi-list">
+          <li>Rows before join <b>600,000</b></li>
+          <li>Rows after join <b>600,000</b></li>
+          <li>Difference <b style="color:var(--green)">0</b></li>
+          <li>Columns after join <b>14</b></li>
+          <li>Join time (pandas) <b>0.80s</b></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Derived metric</h3>
+        <p style="font-size:12.8px;margin:0 0 8px;">
+          <span class="mono">amount = qty × unit_price</span> — line-item revenue actually charged,
+          not the product's <span class="mono">catalog_price</span> (they can differ due to promotions).
+        </p>
+        <p style="font-size:12.8px;margin:0;color:var(--grey);">
+          Column collisions handled: <span class="mono">order_items.price → unit_price</span>,
+          <span class="mono">products.price → catalog_price</span>, <span class="mono">stores.city → store_city</span>.
+        </p>
+      </div>
+    </div>
+
+    <h2 class="section">Partition key candidates — measured, not asserted (Part 5)</h2>
+    <table>
+      <thead><tr><th>Column</th><th>Distinct</th><th>Min</th><th>Median</th><th>Max</th><th>Skew</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">customer_id</td><td>49,751</td><td>1</td><td>11</td><td>43</td><td>43.00</td><td><span class="pill rejected">rejected</span> per-customer granularity, not a dimension</td></tr>
+        <tr><td class="mono">amount</td><td>11,984</td><td>9</td><td>38</td><td>153</td><td>17.00</td><td><span class="pill rejected">rejected</span> the measure being aggregated</td></tr>
+        <tr><td class="mono">catalog_price</td><td>4,268</td><td>36</td><td>123</td><td>556</td><td>15.44</td><td><span class="pill rejected">rejected</span> continuous financial value</td></tr>
+        <tr><td class="mono">order_id</td><td>259,233</td><td>1</td><td>2</td><td>11</td><td>11.00</td><td><span class="pill rejected">rejected</span> foreign key, not a dimension</td></tr>
+        <tr><td class="mono">product_id</td><td>10,000</td><td>26</td><td>60</td><td>90</td><td>3.46</td><td><span class="pill rejected">rejected</span> near-SKU granularity</td></tr>
+        <tr><td class="mono">supplier_id</td><td>200</td><td>1,915</td><td>2,978</td><td>4,086</td><td>2.13</td><td><span class="pill viable">viable</span> — not chosen, a candidate for a future supplier-level session</td></tr>
+        <tr><td class="mono">unit_price</td><td>4,900</td><td>84</td><td>122</td><td>160</td><td>1.90</td><td><span class="pill rejected">rejected</span> continuous financial value</td></tr>
+        <tr><td class="mono">order_date</td><td>1,462</td><td>312</td><td>409</td><td>538</td><td>1.72</td><td><span class="pill rejected">rejected</span> event timestamp</td></tr>
+        <tr><td class="mono">store_city</td><td>4</td><td>124,929</td><td>144,394</td><td>186,283</td><td>1.49</td><td><span class="pill rejected">rejected</span> too coarse to fill 8 partitions</td></tr>
+        <tr style="background:#fff9ea;"><td class="mono"><b>category_id</b></td><td>30</td><td>17,618</td><td>20,066</td><td>21,429</td><td>1.22</td><td><span class="pill chosen">CHOSEN</span> real skew + genuine business dimension</td></tr>
+        <tr><td class="mono">store_id</td><td>100</td><td>5,644</td><td>6,005</td><td>6,299</td><td>1.12</td><td><span class="pill viable">viable</span> — not chosen, less skew than category_id</td></tr>
+        <tr><td class="mono">promotion_id</td><td>50</td><td>11,498</td><td>11,972</td><td>12,478</td><td>1.09</td><td><span class="pill viable">viable</span> — not chosen, less skew than category_id</td></tr>
+        <tr><td class="mono">qty</td><td>4</td><td>149,564</td><td>149,972</td><td>150,492</td><td>1.01</td><td><span class="pill rejected">rejected</span> near-uniform, nothing to analyse</td></tr>
+        <tr><td class="mono">order_item_id</td><td>600,000</td><td>1</td><td>1</td><td>1</td><td>1.00</td><td><span class="pill rejected">rejected</span> row identifier</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:12px;color:var(--grey);">15 columns scored in the joined frame. category_id wins on the combination of a real, measurable skew (1.22:1) and being a genuine business dimension — supplier_id and order_id/catalog_price show higher skew but are either too fine-grained, an identifier, or a continuous price rather than a grouping attribute.</p>
+  </section>
+
+  <!-- ================= BASELINE VS PARALLEL ================= -->
+  <section class="panel" id="baseline">
+    <div class="banner ok">
+      <b>Sequential baseline (pandas) — completed.</b> 5 runs: 0.0117s, 0.0101s, 0.0100s, 0.0100s, 0.0098s
+      → <b>median 0.0100s</b>, mean 0.0103s, 30 groups.
+    </div>
+    <div class="banner">
+      <b>Parallel conditions (Spark, 2/4/8 partitions) — not run.</b> <code>benchmark.py</code> is ready
+      to execute the same workload under bounded parallelism once PySpark + a compatible JDK are installed
+      (see Console tab). It will compare the median of 3 runs per setting against the 0.0100s baseline above.
+    </div>
+
+    <h2 class="section">Top 10 categories by revenue (pandas baseline)</h2>
+    <table>
+      <thead><tr><th>category_id</th><th>line_count</th><th>revenue_total</th><th>revenue_mean</th></tr></thead>
+      <tbody>
+        <tr><td>5</td><td>21,429</td><td>136,704,132</td><td>6,379.40</td></tr>
+        <tr><td>3</td><td>21,177</td><td>135,379,339</td><td>6,392.75</td></tr>
+        <tr><td>21</td><td>21,066</td><td>135,329,061</td><td>6,424.05</td></tr>
+        <tr><td>26</td><td>21,129</td><td>134,697,069</td><td>6,374.99</td></tr>
+        <tr><td>12</td><td>21,080</td><td>133,897,588</td><td>6,351.88</td></tr>
+        <tr><td>28</td><td>20,957</td><td>133,603,891</td><td>6,375.14</td></tr>
+        <tr><td>8</td><td>20,950</td><td>132,816,590</td><td>6,339.69</td></tr>
+        <tr><td>9</td><td>20,909</td><td>132,465,085</td><td>6,335.31</td></tr>
+        <tr><td>13</td><td>20,746</td><td>132,409,449</td><td>6,382.41</td></tr>
+        <tr><td>17</td><td>20,763</td><td>132,292,751</td><td>6,371.56</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:12.8px;"><b>Total revenue across all 30 categories: 3,827,746,136.00</b></p>
+  </section>
+
+  <!-- ================= CORRECTNESS & OUTPUT ================= -->
+  <section class="panel" id="correctness">
+    <div class="banner">
+      <b>Not run yet.</b> <code>parallel_compute.py</code> calls <code>validate()</code>, which will
+      compare the Spark aggregation against <span class="mono">baseline_result.csv</span> above.
+      Nothing here is fabricated — this tab shows what the check does and what it will report once
+      Spark runs.
+    </div>
+    <div class="card">
+      <h3>What validate() checks, in order</h3>
+      <ol style="font-size:12.8px;line-height:1.7;margin:0;padding-left:20px;">
+        <li><b>Group count match</b> — parallel and baseline must produce the same 30 groups.</li>
+        <li><b>line_count difference</b> — must be exactly 0. Any nonzero value means the join
+            duplicated or dropped rows, independent of whether the averages look plausible.</li>
+        <li><b>revenue_mean difference</b> — must be under the tolerance <span class="mono">1e-6</span>.
+            Spark sums each partition independently then combines, so pandas and Spark can differ in
+            the last few digits from floating-point summation order alone — both are correct.</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h3>Expected output schema</h3>
+      <table style="border:1px solid var(--grey-line);">
+        <thead><tr><th>Column</th><th>Type</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">category_id</td><td>int64</td></tr>
+          <tr><td class="mono">line_count</td><td>int64</td></tr>
+          <tr><td class="mono">revenue_total</td><td>double</td></tr>
+          <tr><td class="mono">revenue_mean</td><td>double</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= PARTITION BALANCE ================= -->
+  <section class="panel" id="balance">
+    <h2 class="section">Key-level skew — category_id (measured, pandas)</h2>
+    <div class="grid2">
+      <div class="card">
+        <h3>Heaviest 5 categories</h3>
+        <div class="bars">
+          <div class="bar-row"><span>cat 5</span><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span>21,429</span></div>
+          <div class="bar-row"><span>cat 3</span><div class="bar-track"><div class="bar-fill" style="width:98.8%"></div></div><span>21,177</span></div>
+          <div class="bar-row"><span>cat 26</span><div class="bar-track"><div class="bar-fill" style="width:98.6%"></div></div><span>21,129</span></div>
+          <div class="bar-row"><span>cat 12</span><div class="bar-track"><div class="bar-fill" style="width:98.4%"></div></div><span>21,080</span></div>
+          <div class="bar-row"><span>cat 21</span><div class="bar-track"><div class="bar-fill" style="width:98.3%"></div></div><span>21,066</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Lightest 5 categories</h3>
+        <div class="bars">
+          <div class="bar-row"><span>cat 24</span><div class="bar-track"><div class="bar-fill light" style="width:88.3%"></div></div><span>18,930</span></div>
+          <div class="bar-row"><span>cat 1</span><div class="bar-track"><div class="bar-fill light" style="width:87.4%"></div></div><span>18,718</span></div>
+          <div class="bar-row"><span>cat 14</span><div class="bar-track"><div class="bar-fill light" style="width:87.2%"></div></div><span>18,689</span></div>
+          <div class="bar-row"><span>cat 23</span><div class="bar-track"><div class="bar-fill light" style="width:85.1%"></div></div><span>18,243</span></div>
+          <div class="bar-row"><span>cat 2</span><div class="bar-track"><div class="bar-fill light" style="width:82.2%"></div></div><span>17,618</span></div>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:12.8px;">30 distinct categories, min 17,618 / median 20,066 / max 21,429 records → <b>1.22 : 1</b> skew ratio. This is fixed by the data and does not change with partition count.</p>
+
+    <h2 class="section">Rejected alternatives, for comparison</h2>
+    <table>
+      <thead><tr><th>Key</th><th>Distinct</th><th>Skew ratio</th><th>Why not chosen</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">customer_id</td><td>49,751</td><td>43.00 : 1</td><td>Skew is real, but 49,751 groups is per-customer granularity, not a dimensional rollup.</td></tr>
+        <tr><td class="mono">store_city</td><td>4</td><td>1.49 : 1</td><td>Only 4 distinct values — can't fill 8 worker partitions without forcing shares.</td></tr>
+        <tr><td class="mono">supplier_id</td><td>200</td><td>2.13 : 1</td><td>Numerically viable and more skewed than category_id — a good candidate for a future session focused on supply chain rather than product category.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="banner" style="margin-top:18px;">
+      <b>Physical Spark-partition skew — not run.</b> <code>partition_analysis.py</code> will repartition
+      into 2/4/8 physical partitions with <span class="mono">repartition(n, 'category_id')</span> and
+      measure actual record counts per partition via <span class="mono">rdd.glom().map(len)</span>.
+      That number is expected to diverge from the 1.22:1 key-level ratio above — a hash partitioner maps
+      many keys onto few partitions, so an unlucky pairing of two heavy categories in one partition isn't
+      diluted at higher partition counts. This needs Spark to observe.
+    </div>
+  </section>
+
+  <!-- ================= CONSOLE ================= -->
+  <section class="panel" id="console">
+    <div class="banner">
+      <b>Why Spark hasn't run:</b> this build machine has no internet access, so <code>pip install pyspark</code>
+      fails outright here. On your own machine, the actual blocker reported was a JVM crash inside
+      <span class="mono">cfg.build_spark()</span> — <span class="mono">ClassNotFoundException: jdk.internal.ref.Cleaner</span> —
+      which means the installed JDK is newer than your PySpark build supports.
+      Fix: install <b>JDK 17</b> (safest, works with PySpark 3.5–4.1) or <b>JDK 21</b> (PySpark 4.0+),
+      point <code>JAVA_HOME</code> at it, and confirm with <code>java -version</code> before re-running
+      <code>benchmark.py</code>.
+    </div>
+    <div class="console-box">$ python profile_files.py
+<span class="dim">========================================================================</span>
+<span class="h">SESSION 1 - FILE PROFILING</span>
+<span class="dim">========================================================================</span>
+FILE: order_items.csv       role=Event   rows=600,000 cols=5  size=14736.1 KB
+FILE: orders.csv            role=Event   rows=300,000 cols=5  size= 8539.3 KB
+FILE: payments.csv          role=Event   rows=300,000 cols=3  size= 5483.7 KB
+FILE: shipments.csv         role=Event   rows=300,000 cols=3  size= 6130.8 KB
+FILE: returns.csv           role=Event   rows= 30,000 cols=3  size=  505.3 KB
+FILE: customers.csv         role=Entity  rows= 50,000 cols=3  size= 1160.9 KB
+FILE: employees.csv         role=Entity  rows=  1,000 cols=3  size=   12.5 KB
+FILE: products.csv          role=Entity  rows= 10,000 cols=4  size=  154.9 KB
+FILE: stores.csv            role=Entity  rows=    100 cols=2  size=    1.0 KB
+FILE: suppliers.csv         role=Entity  rows=    200 cols=2  size=    1.7 KB
+FILE: categories.csv        role=Lookup  rows=     30 cols=2  size=    0.3 KB
+FILE: promotions.csv        role=Lookup  rows=     50 cols=2  size=    0.3 KB
+
+<span class="dim">========================================================================</span>
+<span class="h">REFERENTIAL INTEGRITY (11 foreign keys)</span>
+<span class="dim">========================================================================</span>
+<span class="g">PASS</span>  order_items.order_id -&gt; orders.order_id
+<span class="g">PASS</span>  order_items.product_id -&gt; products.product_id
+<span class="g">PASS</span>  orders.customer_id -&gt; customers.customer_id
+<span class="g">PASS</span>  orders.store_id -&gt; stores.store_id
+<span class="g">PASS</span>  orders.promotion_id -&gt; promotions.promotion_id
+<span class="g">PASS</span>  products.category_id -&gt; categories.category_id
+<span class="g">PASS</span>  products.supplier_id -&gt; suppliers.supplier_id
+<span class="g">PASS</span>  employees.store_id -&gt; stores.store_id
+<span class="g">PASS</span>  payments.order_id -&gt; orders.order_id
+<span class="g">PASS</span>  shipments.order_id -&gt; orders.order_id
+<span class="g">PASS</span>  returns.order_item_id -&gt; order_items.order_item_id
+  orphan records: all zero
+
+<span class="dim">========================================================================</span>
+<span class="h">DATASET ELIGIBILITY (Part 2)</span>
+<span class="dim">========================================================================</span>
+<span class="g">MET </span>  condition_1_three_related_files
+<span class="g">MET </span>  condition_2_one_to_many
+<span class="g">MET </span>  condition_3_timestamp
+<span class="g">MET </span>  condition_4_volume
+
+All eligibility conditions met. Proceed to load_and_join.py
+
+$ python load_and_join.py
+<span class="dim">========================================================================</span>
+<span class="h">JOIN PATH RECONCILIATION</span>
+<span class="dim">========================================================================</span>
+  join path        : order_items |&gt; orders |&gt; stores |&gt; products
+  rows before join  : 600,000
+  rows after join   : 600,000
+  difference        : 0
+  columns after     : 14
+  join time         : 0.80 s
+<span class="a">  (no pyarrow/fastparquet available - wrote working_dataset.pkl instead)</span>
+Wrote results/working_dataset.parquet (600,000 rows)
+
+$ python sequential_baseline.py
+<span class="dim">========================================================================</span>
+<span class="h">SEQUENTIAL BASELINE</span>
+<span class="dim">========================================================================</span>
+  run 1: 0.0117 s
+  run 2: 0.0101 s
+  run 3: 0.0100 s
+  run 4: 0.0100 s
+  run 5: 0.0098 s
+
+  median : 0.0100 s
+  mean   : 0.0103 s
+  groups : 30
+  total revenue across 30 categories: 3,827,746,136.00
+Wrote results/baseline_result.csv
+
+$ python benchmark.py
+<span class="dim">26/08/22 14:02:52 WARN NativeCodeLoader: Unable to load native-hadoop library...</span>
+Traceback (most recent call last):
+  ...
+py4j.protocol.Py4JJavaError: An error occurred while calling None.org.apache.spark.api.java.JavaSparkContext.
+: java.lang.ExceptionInInitializerError
+Caused by: java.lang.IllegalStateException: java.lang.ClassNotFoundException: jdk.internal.ref.Cleaner
+        at org.apache.spark.unsafe.Platform.&lt;clinit&gt;(Platform.java:104)
+        ...
+<span class="a">FIX: your installed JDK is newer than PySpark supports for this class.
+      Install JDK 17 (broadest) or JDK 21 (PySpark 4.0+), set JAVA_HOME to
+      point at it, reopen the terminal, confirm `java -version`, then rerun.</span></div>
+  </section>
+
+</main>
+
+<footer>Retail-Orders Session 1 · generated from real pipeline output · Spark-dependent figures marked "not run" are shown as placeholders for the expected workflow, not fabricated numbers.</footer>
+
+<script>
+  document.getElementById('tabs').addEventListener('click', function(e){
+    if(e.target.tagName !== 'BUTTON') return;
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    e.target.classList.add('active');
+    document.getElementById(e.target.dataset.tab).classList.add('active');
+  });
+</script>
+
+</body>
+</html>

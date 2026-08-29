@@ -1,0 +1,5 @@
+run,parallelism_partitions,execution_time_s,groups,correct,speedup_vs_baseline,observation
+Sequential baseline,1 / non-parallel,0.0201,30,Yes,1.00,"pandas, in-process, no serialisation"
+Parallel (2 partitions),2,0.4074,30,Yes,0.0493,slower than the best setting
+Parallel (4 partitions),4,0.4126,30,Yes,0.0487,slower than the best setting
+Parallel (8 partitions),8,0.3290,30,Yes,0.0611,fastest parallel setting
