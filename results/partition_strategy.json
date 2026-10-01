@@ -223,7 +223,7 @@
     "rows_after": 600000,
     "delta": 0,
     "columns_after": 14,
-    "join_seconds": 0.5425,
+    "join_seconds": 0.2667,
     "join_path": "order_items |> orders |> stores |> products"
   }
 }

@@ -374,6 +374,8 @@
           "parent": "orders",
           "child": "order_items",
           "key": "order_id",
+          "parents_total": 300000,
+          "parents_without_children": 40767,
           "children_min": 1,
           "children_median": 2,
           "children_max": 11
@@ -382,6 +384,8 @@
           "parent": "customers",
           "child": "orders",
           "key": "customer_id",
+          "parents_total": 50000,
+          "parents_without_children": 114,
           "children_min": 1,
           "children_median": 6,
           "children_max": 19
@@ -392,6 +396,7 @@
     },
     "condition_3_timestamp": {
       "met": true,
+      "unparseable": 0,
       "field": "orders.order_date",
       "min": "2020-01-01 00:00:00+00:00",
       "max": "2024-01-01 00:00:00+00:00",
